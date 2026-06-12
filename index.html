@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminarz Mistrzostw Świata 2026</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .settings-btn {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .match-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .match-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .match-date {
+            font-size: 0.9em;
+            color: #999;
+            font-weight: bold;
+        }
+
+        .match-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-upcoming {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-live {
+            background: #ffebee;
+            color: #c62828;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .status-finished {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            gap: 15px;
+        }
+
+        .team {
+            flex: 1;
+            text-align: center;
+        }
+
+        .team-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .score-input {
+            width: 80px;
+            padding: 10px;
+            font-size: 1.5em;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .vs {
+            font-weight: bold;
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        .notes {
+            margin-top: 15px;
+        }
+
+        .notes label {
+            display: block;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .notes textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-group button {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        .btn-delete {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-save {
+            background: #51cf66;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .btn-cancel {
+            background: #ddd;
+            color: #333;
+        }
+
+        .btn-submit {
+            background: #667eea;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .matches-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚽ Terminarz Mistrzostw Świata 2026</h1>
+            <p>Interaktywny scheduler - śledzenie wyników i harmonogramu</p>
+        </header>
+
+        <div class="controls">
+            <button onclick="openAddMatchModal()">➕ Dodaj mecz</button>
+            <button class="settings-btn" onclick="openSettingsModal()">⚙️ Ustawienia</button>
+        </div>
+
+        <div id="matchesContainer" class="matches-grid"></div>
+
+        <!-- Modal - Dodaj mecz -->
+        <div id="addMatchModal" class="modal">
+            <div class="modal-content">
+                <h2>Dodaj nowy mecz</h2>
+                <form onsubmit="addMatch(event)">
+                    <div class="form-group">
+                        <label for="team1">Zespół 1:</label>
+                        <input type="text" id="team1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="team2">Zespół 2:</label>
+                        <input type="text" id="team2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="matchDate">Data meczu:</label>
+                        <input type="datetime-local" id="matchDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="matchStadium">Stadion:</label>
+                        <input type="text" id="matchStadium">
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="btn-cancel" onclick="closeAddMatchModal()">Anuluj</button>
+                        <button type="submit" class="btn-submit">Dodaj mecz</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal - Ustawienia -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <h2>Ustawienia</h2>
+                <div class="form-group">
+                    <button onclick="exportData()">📤 Eksportuj kopię</button>
+                </div>
+                <div class="form-group">
+                    <label for="importFile">📥 Importuj kopię:</label>
+                    <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+                </div>
+                <div class="form-group">
+                    <button onclick="clearAllData()" style="background: #ff6b6b; color: white;">🗑️ Wyczyść wszystkie dane</button>
+                </div>
+                <div class="modal-buttons">
+                    <button onclick="closeSettingsModal()" class="btn-cancel">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'ms2026_matches';
+
+        // Inicjalizacja
+        function init() {
+            loadMatches();
+        }
+
+        // Załaduj mecze z localStorage
+        function loadMatches() {
+            const matches = getMatches();
+            const container = document.getElementById('matchesContainer');
+            
+            if (matches.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <p>📋 Brak meczów. Dodaj pierwszy mecz aby zacząć!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = matches.map((match, index) => `
+                <div class="match-card">
+                    <div class="match-header">
+                        <span class="match-date">${formatDate(match.date)}</span>
+                        <span class="match-status ${getStatusClass(match)}">${getStatus(match)}</span>
+                    </div>
+                    <div class="teams">
+                        <div class="team">
+                            <div class="team-name">${match.team1}</div>
+                            <input type="number" class="score-input" value="${match.score1}" onchange="updateScore(${index}, 1, this.value)">
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="team">
+                            <div class="team-name">${match.team2}</div>
+                            <input type="number" class="score-input" value="${match.score2}" onchange="updateScore(${index}, 2, this.value)">
+                        </div>
+                    </div>
+                    ${match.stadium ? `<p><strong>Stadion:</strong> ${match.stadium}</p>` : ''}
+                    <div class="notes">
+                        <label>Notatki:</label>
+                        <textarea onchange="updateNotes(${index}, this.value)">${match.notes}</textarea>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-delete" onclick="deleteMatch(${index})">Usuń</button>
+                        <button class="btn-save" onclick="saveMatch(${index})">Zapisz</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Pobierz mecze
+        function getMatches() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // Dodaj mecz
+        function addMatch(event) {
+            event.preventDefault();
+            const matches = getMatches();
+            
+            const newMatch = {
+                id: Date.now(),
+                team1: document.getElementById('team1').value,
+                team2: document.getElementById('team2').value,
+                date: document.getElementById('matchDate').value,
+                stadium: document.getElementById('matchStadium').value,
+                score1: 0,
+                score2: 0,
+                notes: ''
+            };
+
+            matches.push(newMatch);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(matches));
+            closeAddMatchModal();
+            loadMatches();
+        }
+
+        // Aktualizuj wynik
+        function updateScore(index, team, value) {
+            const matches = getMatches();
+            if (team === 1) {
+                matches[index].score1 = parseInt(value) || 0;
+            } else {
+                matches[index].score2 = parseInt(value) || 0;
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(matches));
+        }
+
+        // Aktualizuj notatki
+        function updateNotes(index, value) {
+            const matches = getMatches();
+            matches[index].notes = value;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(matches));
+        }
+
+        // Usuń mecz
+        function deleteMatch(index) {
+            if (confirm('Na pewno chcesz usunąć ten mecz?')) {
+                const matches = getMatches();
+                matches.splice(index, 1);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(matches));
+                loadMatches();
+            }
+        }
+
+        // Zapisz mecz
+        function saveMatch(index) {
+            alert('Mecz został zapisany! ✅');
+        }
+
+        // Formatuj datę
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pl-PL', { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Pobierz status meczu
+        function getStatus(match) {
+            const now = new Date();
+            const matchDate = new Date(match.date);
+            
+            if (matchDate > now) {
+                return 'Nadchodzący';
+            } else if (matchDate.getTime() + 3600000 > now) { // +1 godzina
+                return '🔴 NA ŻYWO';
+            } else {
+                return 'Zakończony';
+            }
+        }
+
+        // Pobierz klasę statusu
+        function getStatusClass(match) {
+            const status = getStatus(match);
+            if (status === '🔴 NA ŻYWO') return 'status-live';
+            if (status === 'Zakończony') return 'status-finished';
+            return 'status-upcoming';
+        }
+
+        // Modal - Dodaj mecz
+        function openAddMatchModal() {
+            document.getElementById('addMatchModal').classList.add('active');
+            document.getElementById('team1').focus();
+        }
+
+        function closeAddMatchModal() {
+            document.getElementById('addMatchModal').classList.remove('active');
+            document.getElementById('team1').value = '';
+            document.getElementById('team2').value = '';
+            document.getElementById('matchDate').value = '';
+            document.getElementById('matchStadium').value = '';
+        }
+
+        // Modal - Ustawienia
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // Exportuj dane
+        function exportData() {
+            const matches = getMatches();
+            const dataStr = JSON.stringify(matches, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `ms2026-terminarz-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            alert('Dane zostały wyeksportowane! 📤');
+        }
+
+        // Importuj dane
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data)) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                        alert('Dane zostały zaimportowane! 📥');
+                        loadMatches();
+                        closeSettingsModal();
+                    } else {
+                        alert('❌ Nieprawidłowy format pliku!');
+                    }
+                } catch (error) {
+                    alert('❌ Błąd przy imporcie: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Wyczyść wszystkie dane
+        function clearAllData() {
+            if (confirm('⚠️ Na pewno chcesz wyczyścić WSZYSTKIE dane? Tej akcji nie można cofnąć!')) {
+                localStorage.removeItem(STORAGE_KEY);
+                loadMatches();
+                alert('Wszystkie dane zostały wyczyszczone! 🗑️');
+                closeSettingsModal();
+            }
+        }
+
+        // Zamknij modal po kliknięciu poza
+        window.onclick = function(event) {
+            const addModal = document.getElementById('addMatchModal');
+            const settingsModal = document.getElementById('settingsModal');
+            
+            if (event.target === addModal) {
+                closeAddMatchModal();
+            }
+            if (event.target === settingsModal) {
+                closeSettingsModal();
+            }
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
