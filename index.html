@@ -818,6 +818,7 @@ function loadData(){
 function saveData(data){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem('ms2026_pending_backup', '1');
     const ind = document.getElementById('saveIndicator');
     ind.classList.add('show');
     setTimeout(()=>ind.classList.remove('show'), 1200);
@@ -1187,16 +1188,41 @@ document.getElementById('resetBtn').onclick = ()=>{
   }
 };
 
-document.getElementById('exportBtn').onclick = ()=>{
+function exportData(filenamePrefix){
   const dataStr = JSON.stringify(userData, null, 2);
   const blob = new Blob([dataStr], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'ms2026-terminarz-dane.json';
+  const now = new Date();
+  const pad = n=>String(n).padStart(2,'0');
+  const stamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+  a.download = `${filenamePrefix}-${stamp}.json`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+document.getElementById('exportBtn').onclick = ()=>{
+  exportData('ms2026-terminarz-dane');
 };
+
+// ===================== AUTO-BACKUP (co 6h, jeśli były zmiany) =====================
+const LAST_BACKUP_KEY = 'ms2026_last_backup';
+const PENDING_BACKUP_KEY = 'ms2026_pending_backup';
+const BACKUP_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 godzin
+
+function checkAutoBackup(){
+  const hasPending = localStorage.getItem(PENDING_BACKUP_KEY) === '1';
+  if(!hasPending) return;
+
+  const last = parseInt(localStorage.getItem(LAST_BACKUP_KEY) || '0', 10);
+  const now = Date.now();
+  if(now - last >= BACKUP_INTERVAL_MS){
+    exportData('ms2026-auto-backup');
+    localStorage.setItem(LAST_BACKUP_KEY, String(now));
+    localStorage.removeItem(PENDING_BACKUP_KEY);
+  }
+}
 
 // ===================== SETTINGS PANEL =====================
 const settingsBtn = document.getElementById('settingsBtn');
@@ -1234,9 +1260,11 @@ document.querySelectorAll('.settings-opt[data-theme-opt]').forEach(el=>{
 applyLanguage();
 applyTheme();
 renderAll();
+checkAutoBackup();
 
-// Odśwież statusy meczów (⚽/❗) co minutę
+// Odśwież statusy meczów (⚽/❗) co minutę, sprawdzaj auto-backup co 10 min
 setInterval(()=>{ renderAll(); }, 60000);
+setInterval(()=>{ checkAutoBackup(); }, 10 * 60 * 1000);
 </script>
 
 </body>
